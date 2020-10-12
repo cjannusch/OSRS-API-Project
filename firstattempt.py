@@ -4,13 +4,33 @@ Created on Sun Oct 11 22:25:27 2020
 
 @author: Clayton
 """
-
+import heapq
+import requests
+from bs4 import BeautifulSoup
 from osrsbox import items_api
 items = items_api.load()
+bestItems = []
+counter = 0
 for item in items:
-    print(item.id,item)
-    
-    """
+    counter +=1
+    if counter % 100 == 0:
+        print("item number:",counter)
+    if item.highalch == None or item.buy_limit == None:
+        continue;
+    elif item.highalch > 10000 and item.buy_limit > 10:
+        if item.wiki_exchange != None:
+            url = str(item.wiki_exchange)
+            page = requests.get(url)
+            soup = BeautifulSoup(page.content,'html.parser')
+            price = soup.find(id='GEPrice')
+            intprice = ''.join(x for x in str(price) if x.isdigit())
+            if item.highalch-int(intprice) > 0:
+                heapq.heappush(bestItems,[(item.highalch-int(intprice))/int(intprice),item.name,item.buy_limit,int(intprice)])
+
+for item in bestItems:
+    print(item,"\n")
+
+"""
     
     ItemProperties(id=24944, name='Sourhog foot', incomplete=False, 
                    members=True, tradeable=False, tradeable_on_ge=False, 
@@ -26,4 +46,4 @@ for item in items:
                    wiki_name='Sourhog foot', 
                    wiki_url='https://oldschool.runescape.wiki/w/Sourhog_foot', 
                    wiki_exchange=None, equipment=None, weapon=None)
-    """
+"""
